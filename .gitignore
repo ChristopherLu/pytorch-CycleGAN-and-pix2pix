@@ -1,0 +1,12 @@
+*.csv
+*.zip
+*.pyc
+*.jpg
+*.png
+
+
+
+.idea/*
+results/*
+datasets/*
+checkpoints/*
