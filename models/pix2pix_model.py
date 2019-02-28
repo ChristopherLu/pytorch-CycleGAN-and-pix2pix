@@ -109,3 +109,11 @@ class Pix2PixModel(BaseModel):
         self.optimizer_G.zero_grad()
         self.backward_G()
         self.optimizer_G.step()
+
+    def val_l1_loss(self):
+        self.forward()
+        # calculate L1 loss
+        return self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+
+
+

@@ -1,4 +1,4 @@
-import time
+import time, math
 from options.train_options import TrainOptions
 from options.val_options import ValOptions
 from data import CreateDataLoader
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     model.setup(opt)
     visualizer = Visualizer(opt)
     total_steps = 0
-
+    best_val_loss = math.inf
     for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
         epoch_start_time = time.time()
         iter_data_time = time.time()
@@ -54,11 +54,23 @@ if __name__ == '__main__':
                 model.save_networks('latest')
 
             iter_data_time = time.time()
-        if epoch % opt.save_epoch_freq == 0:
-            print('saving the model at the end of epoch %d, iters %d' %
-                  (epoch, total_steps))
-            model.save_networks('latest')
-            model.save_networks(epoch)
+
+        # time to validate every epoch
+        for j, val_data in enumerate(val_dataset):
+            model.set_input(val_data)
+            val_loss = float(model.val_l1_loss())
+            print('Val loss at epoch {} is {}'.format(epoch, val_loss))
+
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            model.save_networks('best')
+            print('Better val loss found: {}, model saved!!'.format(best_val_loss))
+
+        # if epoch % opt.save_epoch_freq == 0:
+        #     print('saving the model at the end of epoch %d, iters %d' %
+        #           (epoch, total_steps))
+        #     model.save_networks('latest')
+        #     model.save_networks(epoch)
 
         print('End of epoch %d / %d \t Time Taken: %d sec' %
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
