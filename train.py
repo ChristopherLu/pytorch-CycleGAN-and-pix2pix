@@ -1,16 +1,21 @@
 import time
 from options.train_options import TrainOptions
+from options.val_options import ValOptions
 from data import CreateDataLoader
 from models import create_model
 from util.visualizer import Visualizer
 
 if __name__ == '__main__':
+    opt = ValOptions().parse()
+    val_data_loader = CreateDataLoader(opt)
+    val_dataset = val_data_loader.load_data()
+    val_dataset_size = len(val_data_loader)
+
     opt = TrainOptions().parse()
-    data_loader = CreateDataLoader(opt)
-    print(data_loader)
-    dataset = data_loader.load_data()
-    dataset_size = len(data_loader)
-    print('#training images = %d' % dataset_size)
+    train_data_loader = CreateDataLoader(opt)
+    train_dataset = train_data_loader.load_data()
+    train_dataset_size = len(train_data_loader)
+    print('#training images = %d, #validation images = %d' % (train_dataset_size, val_dataset_size))
 
     model = create_model(opt)
     model.setup(opt)
@@ -22,7 +27,7 @@ if __name__ == '__main__':
         iter_data_time = time.time()
         epoch_iter = 0
 
-        for i, data in enumerate(dataset):
+        for i, data in enumerate(train_dataset):
             iter_start_time = time.time()
             if total_steps % opt.print_freq == 0:
                 t_data = iter_start_time - iter_data_time
@@ -41,7 +46,7 @@ if __name__ == '__main__':
                 t = (time.time() - iter_start_time) / opt.batch_size
                 visualizer.print_current_losses(epoch, epoch_iter, losses, t, t_data)
                 if opt.display_id > 0:
-                    visualizer.plot_current_losses(epoch, float(epoch_iter) / dataset_size, opt, losses)
+                    visualizer.plot_current_losses(epoch, float(epoch_iter) / train_dataset_size, opt, losses)
 
             if total_steps % opt.save_latest_freq == 0:
                 print('saving the latest model (epoch %d, total_steps %d)' %
